@@ -489,6 +489,17 @@ input[type=range]{width:100%;margin-top:5px;accent-color:var(--text);cursor:poin
         <option value="health">Health</option>
       </select>
     </div>
+    <div class="modal-field"><label class="modal-lbl">Update Frequency</label>
+      <select class="modal-select" id="m-freq">
+        <option value="">— None —</option>
+        <option value="Daily">Daily</option>
+        <option value="Weekly">Weekly</option>
+        <option value="Bi-weekly">Bi-weekly</option>
+        <option value="Monthly">Monthly</option>
+        <option value="Quarterly">Quarterly</option>
+        <option value="As needed">As needed</option>
+      </select>
+    </div>
     <div class="modal-field"><label class="modal-lbl">Color</label><div class="color-grid" id="m-colors"></div></div>
     <div class="modal-field"><label class="prog-toggle"><input type="checkbox" id="m-prog"> Show progress bar</label></div>
     <div class="modal-footer">
@@ -805,7 +816,10 @@ function renderCard(card){
     <div class="card-hd">
       <div class="card-title-group">
         <div class="card-title">${esc(card.name)}${odCount>0?` <span style="color:var(--red);font-size:11px;font-weight:700;">${odCount} overdue</span>`:''}</div>
-        <span class="tag" style="background:${cm.bg};color:${cm.c};border-color:${cm.b};">${esc(card.status||'')}</span>
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+          <span class="tag" style="background:${cm.bg};color:${cm.c};border-color:${cm.b};">${esc(card.status||'')}</span>
+          ${card.freq?`<span class="freq-badge" style="background:var(--border2);color:var(--text2);">↻ ${esc(card.freq)}</span>`:''}
+        </div>
       </div>
       <div class="card-acts">
         <button class="ico-btn" onclick="openCardModal('${card.id}')" title="Edit">✎</button>
@@ -1375,6 +1389,7 @@ function openCardModal(id){
   document.getElementById('m-name').value=c.name||'';
   document.getElementById('m-status').value=c.status||'';
   document.getElementById('m-tab').value=c.tab||'work';
+  document.getElementById('m-freq').value=c.freq||'';
   document.getElementById('m-prog').checked=!!c.showProgress;
   const grid=document.getElementById('m-colors');
   grid.innerHTML=COLOR_KEYS.map(k=>`<div class="cswatch ${c.color===k?'sel':''}" style="background:${CM[k].c}" onclick="pickModalColor('${k}')"></div>`).join('');
@@ -1395,6 +1410,7 @@ function saveCardModal(){
   c.name=document.getElementById('m-name').value.trim()||c.name;
   c.status=document.getElementById('m-status').value.trim();
   c.tab=document.getElementById('m-tab').value;
+  c.freq=document.getElementById('m-freq').value;
   c.showProgress=document.getElementById('m-prog').checked;
   if(c.showProgress&&c.progress==null)c.progress=0;
   const sel=document.querySelector('#m-colors .cswatch.sel');
