@@ -422,6 +422,15 @@ input[type=range]{width:100%;margin-top:5px;accent-color:var(--text);cursor:poin
 .bd-assign-select:focus{border-color:#ccc;background:white;}
 .bd-empty{text-align:center;padding:48px 0;color:var(--text3);font-size:13px;line-height:1.8;}
 
+/* ── WORK LOCATION TOGGLE ── */
+.wl-toggle{display:flex;gap:5px;margin-bottom:4px;}
+.wl-btn{flex:1;padding:6px 10px;border-radius:5px;border:1px solid var(--border);
+  background:var(--bg);font-size:12px;font-weight:600;color:var(--text3);
+  cursor:pointer;font-family:inherit;transition:all .12s;text-align:center;}
+.wl-btn:hover{border-color:#ccc;color:var(--text2);}
+.wl-btn.active-office{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-b);}
+.wl-btn.active-wfh{background:var(--green-bg);color:var(--green);border-color:var(--green-b);}
+
 /* ── TOAST ── */
 .toast{position:fixed;bottom:22px;right:22px;background:var(--text);color:white;
   padding:9px 15px;border-radius:7px;font-size:13px;font-weight:500;
@@ -569,7 +578,7 @@ let calSelectedKey=dateKey(new Date());
 let dragSrcIdx=null,dragCtx=null,laDragSrc=null;
 let cardDragSrcId=null;
 // track which cal sections are open
-let calSections={notes:true,events:true,todos:true,journal:false,sources:false};
+let calSections={worklocation:true,notes:true,events:true,todos:true,journal:false,sources:false};
 
 // ── STORAGE ───────────────────────────────────────────────
 function loadState(){
@@ -1087,7 +1096,8 @@ function renderCalendar(main){
     const hasContent=ddd&&(ddd.note||(ddd.events&&ddd.events.length)||(ddd.sources&&ddd.sources.length)||(ddd.todos&&ddd.todos.length)||(ddd.journal));
     const isToday=dk===tk,isSel=dk===selKey;
     const evDots=(ddd&&ddd.events||[]).slice(0,2).map(ev=>`<div class="cal-event-dot" style="background:#e5e7eb;color:#6b7280">${esc(ev.title||'')}</div>`).join('');
-    gridHtml+=`<div class="cal-day ${isToday?'today':''} ${isSel&&!isToday?'selected':''} ${isToday&&isSel?'today selected':''} ${hasContent?'has-content':''}" onclick="selectCalDay('${dk}')">${d}${evDots}</div>`;
+    const wlDot=ddd?.workLocation==='office'?`<div style="font-size:8px;line-height:1;margin-top:1px;">🏢</div>`:ddd?.workLocation==='wfh'?`<div style="font-size:8px;line-height:1;margin-top:1px;">🏠</div>`:'';
+    gridHtml+=`<div class="cal-day ${isToday?'today':''} ${isSel&&!isToday?'selected':''} ${isToday&&isSel?'today selected':''} ${hasContent?'has-content':''}" onclick="selectCalDay('${dk}')">${d}${evDots}${wlDot}</div>`;
   }
   const endPad=(7-((startPad+lastDay.getDate())%7))%7;
   for(let i=1;i<=endPad;i++){
@@ -1107,6 +1117,12 @@ function renderCalendar(main){
       <div class="cal-section-body" id="cal-sec-${id}" style="display:${open?'block':'none'}">${bodyHtml}</div>
     </div>`;
   }
+
+  const wl=dd.workLocation||'';
+  const wlBody=`<div class="wl-toggle">
+    <button class="wl-btn ${wl==='office'?'active-office':''}" onclick="setWorkLocation('${selKey}','${wl==='office'?'':'office'}')">🏢 In Office</button>
+    <button class="wl-btn ${wl==='wfh'?'active-wfh':''}" onclick="setWorkLocation('${selKey}','${wl==='wfh'?'':'wfh'}')">🏠 Work from Home</button>
+  </div>`;
 
   const noteBody=`<textarea class="cal-note-area" placeholder="Notes for this day…" oninput="saveCalNote('${selKey}',this.value)">${esc(dd.note||'')}</textarea>`;
 
@@ -1162,6 +1178,7 @@ function renderCalendar(main){
       </div>
       <div class="cal-detail">
         <div class="cal-detail-date">${selLabel}</div>
+        ${calSec('worklocation','Work Location',wlBody)}
         ${calSec('notes','Notes',noteBody)}
         ${calSec('events','Events',evBody)}
         ${calSec('todos','To-Do',todoBody)}
@@ -1190,6 +1207,7 @@ function selectCalDay(key){
   const d=parseKey(key);calYear=d.getFullYear();calMonth=d.getMonth();
   renderCalendar(document.getElementById('main'));
 }
+function setWorkLocation(key,val){ensureCalDay(key);state.calData[key].workLocation=val;save();renderCalendar(document.getElementById('main'));}
 function saveCalNote(key,val){ensureCalDay(key);state.calData[key].note=val;save();}
 function saveCalJournal(key,val){ensureCalDay(key);state.calData[key].journal=val;save();}
 function ensureCalDay(key){if(!state.calData[key])state.calData[key]={note:'',sources:[],events:[],todos:[],journal:''};}
